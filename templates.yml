@@ -1,0 +1,36 @@
+---
+- name: Process a template from the cluster
+  community.okd.openshift_process:
+    state: rendered
+    name: nginx-example
+    namespace: openshift # only needed if using a template already on the server
+    parameters:
+      NAMESPACE: openshift
+      NAME: test123
+  register: result
+
+- name: Create the rendered resources
+  community.okd.k8s:
+    namespace: process-test
+    definition: '{{ item }}'
+    wait: yes
+    apply: yes
+  loop: '{{ result.resources }}'
+
+- name: Delete the rendered resources
+  community.okd.k8s:
+    namespace: process-test
+    definition: '{{ item }}'
+    wait: yes
+    state: absent
+  loop: '{{ result.resources }}'
+
+- name: Process a template and create the resources in the cluster
+  community.okd.openshift_process:
+    name: nginx-example
+    namespace: openshift # only needed if using a template already on the server
+    parameters:
+      NAMESPACE: openshift
+      NAME: test123
+    state: present
+    namespace_target: process-test

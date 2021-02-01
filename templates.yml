@@ -11,7 +11,7 @@
 
 - name: Create the rendered resources
   community.okd.k8s:
-    namespace: process-test
+    namespace: testing
     definition: '{{ item }}'
     wait: yes
     apply: yes
@@ -19,7 +19,7 @@
 
 - name: Delete the rendered resources
   community.okd.k8s:
-    namespace: process-test
+    namespace: testing
     definition: '{{ item }}'
     wait: yes
     state: absent
@@ -33,4 +33,4 @@
       NAMESPACE: openshift
       NAME: test123
     state: present
-    namespace_target: process-test
+    namespace_target: testing

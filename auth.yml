@@ -63,6 +63,8 @@
     host: '{{ cluster_info.connection.host }}'
     verify_ssl: false
   register: auth 
+  retries: 10
+  until: auth is successful
 
 - name: List pods in the test namespace as the test User
   kubernetes.core.k8s_info:

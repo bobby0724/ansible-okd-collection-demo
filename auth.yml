@@ -1,0 +1,74 @@
+---
+- name: 'Configure htpasswd secret (username: test, password: testing123)'
+  community.okd.k8s:
+    definition:
+      apiVersion: v1
+      kind: Secret
+      metadata:
+        name: htpass-secret
+        namespace: openshift-config
+      stringData:
+        htpasswd: "test:$2y$05$zgjczyp96jCIp//CGmnWiefhd7G3l54IdsZoV4IwA1UWtd04L0lE2"
+
+- name: Configure htpasswd identity provider
+  community.okd.k8s:
+    definition:
+      apiVersion: config.openshift.io/v1
+      kind: OAuth
+      metadata:
+        name: cluster
+      spec:
+        identityProviders:
+        - name: htpasswd_provider
+          mappingMethod: claim
+          type: HTPasswd
+          htpasswd:
+            fileData:
+              name: htpass-secret
+
+- name: Create the test user
+  community.okd.k8s:
+    definition:
+      apiVersion: user.openshift.io/v1
+      kind: User
+      metadata:
+        name: test
+      identities:
+        - htpasswd_provider:test
+
+- name: Create ClusterRoleBinding for test user
+  community.okd.k8s:
+    definition:
+      apiVersion: rbac.authorization.k8s.io/v1
+      kind: ClusterRoleBinding
+      metadata:
+        name: test-cluster-reader
+      roleRef:
+        apiGroup: rbac.authorization.k8s.io
+        kind: ClusterRole
+        name: cluster-reader
+      subjects:
+        - apiGroup: rbac.authorization.k8s.io
+          kind: User
+          name: test
+
+- name: Get API url
+  community.kubernetes.k8s_cluster_info:
+  register: cluster_info
+
+- name: Log in (obtain access token)
+  community.okd.openshift_auth:
+    username: test
+    password: testing123
+    host: '{{ cluster_info.connection.host }}'
+    verify_ssl: false
+  register: auth 
+
+- name: List pods in the test namespace as the test User
+  kubernetes.core.k8s_info:
+    api_key: "{{ auth.openshift_auth.api_key }}"
+    host: '{{ cluster_info.connection.host }}'
+    verify_ssl: false
+    kind: Pod
+    api_version: v1
+    namespace: testing

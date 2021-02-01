@@ -1,0 +1,60 @@
+---
+- name: Create a project
+  community.okd.k8s:
+    name: testing
+    kind: Project
+    api_version: project.openshift.io/v1
+
+- name: Create ImageStream
+  community.okd.k8s:
+    src: files/imagestream.yaml
+
+- name: Create deployment config
+  community.okd.k8s:
+    state: present
+    src: files/deploymentconfig.yaml
+    wait: yes
+    wait_condition:
+      type: Available
+      status: "True"
+
+- name: Change image on deployment config
+  community.okd.k8s:
+    state: present
+    api_version: v1
+    kind: DeploymentConfig
+    name: hello-world-dc
+    namespace: testing
+    definition:
+      spec:
+        template:
+          spec:
+            containers:
+              - image: python
+                name: hello-world
+    wait: yes
+    wait_condition:
+      type: Available
+      status: "True"
+
+- name: Create Deployment referencing imagestream
+  community.okd.k8s:
+    state: present
+    src: files/deployment.yaml
+    wait: yes
+
+- name: Change image on deployment
+  community.okd.k8s:
+    state: present
+    api_version: apps/v1
+    kind: Deployment
+    name: hello-world-deployment
+    namespace: testing
+    definition:
+      spec:
+        template:
+          spec:
+            containers:
+              - image: python
+                name: hello-world
+    wait: yes

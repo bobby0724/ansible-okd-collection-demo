@@ -1,0 +1,41 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: hello-world-deployment
+  namespace: testing
+  annotations:
+    image.openshift.io/triggers: |
+      - from:
+          kind: ImageStreamTag
+          name: "python:latest"
+        fieldPath: 'spec.template.spec.containers[?(@.name=="hello-world")].image}'
+spec:
+  template:
+    metadata:
+      labels:
+        app: hello-world-deployment
+      annotations:
+        alpha.image.policy.openshift.io/resolve-names: "*"
+
+    spec:
+      containers:
+        - image: python
+          imagePullPolicy: Always
+          name: hello-world
+          command:
+            - python
+            - '-m'
+            - http.server
+          readinessProbe:
+            initialDelaySeconds: 15
+            exec:
+              command:
+                - /bin/true
+          env:
+            - name: TEST
+              value: test
+  selector:
+    matchLabels:
+      app: hello-world-deployment
+  replicas: 1

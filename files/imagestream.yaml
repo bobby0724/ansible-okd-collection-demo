@@ -1,0 +1,17 @@
+---
+apiVersion: image.openshift.io/v1
+kind: ImageStream
+metadata:
+  name: python
+  namespace: testing
+spec:
+  lookupPolicy:
+    local: true
+  tags:
+  - annotations: null
+    from:
+      kind: DockerImage
+      name: docker.io/python
+    name: latest
+    referencePolicy:
+      type: Source

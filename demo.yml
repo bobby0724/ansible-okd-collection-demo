@@ -1,0 +1,42 @@
+---
+- hosts: localhost
+  connection: local
+  gather_facts: no
+  tasks:
+    - import_tasks: imagestreams.yml
+    - import_tasks: route.yml
+    - import_tasks: auth.yml
+    - import_tasks: templates.yml
+    - meta: refresh_inventory
+
+- name: inventory and connection plugin demo
+  # This group is created by the openshift_inventory plugin
+  # It is automatically configured to use the `oc` connection plugin
+  hosts: namespace_testing_pods
+  gather_facts: no
+  vars:
+    file_content: |
+      Hello world
+  tasks:
+    - name: End play if host not running
+      meta: end_host
+      when: pod_phase != "Running"
+
+    - setup:
+
+    - debug:
+        msg: "The value of the TEST envvar is '{{ ansible_facts.env.TEST }}'"
+
+    - name: Copy a file into the host
+      copy:
+        content: '{{ file_content }}'
+        dest: /tmp/test_file
+
+    - name: Retrieve the file from the host
+      slurp:
+        src: /tmp/test_file
+      register: slurped_file
+
+    - name: Assert the file content matches expectations
+      assert:
+        that: (slurped_file.content|b64decode) == file_content

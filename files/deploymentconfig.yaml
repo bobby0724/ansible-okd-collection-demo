@@ -27,7 +27,15 @@ spec:
             - name: TEST
               value: test
   triggers:
-    - type: ConfigChange
+    - type: ImageChange
+      imageChangeParams:
+        automatic: true
+        from:
+          kind: ImageStreamTag
+          name: python:latest
+          namespace: testing
+        containerNames:
+          - hello-world
   replicas: 1
   strategy:
     type: Recreate

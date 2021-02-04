@@ -54,13 +54,6 @@
   retries: 10
   register: result
 
-- name: Delete route
-  community.okd.openshift_route:
-    name: '{{ route.result.metadata.name }}'
-    namespace: default
-    state: absent
-    wait: yes
-
 - name: Create Route with custom name and wait
   community.okd.openshift_route:
     service: hello-openshift
@@ -75,12 +68,6 @@
     return_content: yes
   register: result
 
-- name: Delete route
-  community.okd.openshift_route:
-    name: '{{ route.result.metadata.name }}'
-    namespace: default
-    state: absent
-    wait: yes
 
 - name: Create edge-terminated route that allows insecure traffic
   community.okd.openshift_route:
@@ -99,7 +86,6 @@
   until: result is successful
   retries: 10
   register: result
-
 
 - name: Attempt to hit https URL
   uri:
@@ -131,7 +117,6 @@
   retries: 10
   register: result
 
-
 - name: Attempt to hit https URL
   uri:
     url: 'https://{{ route.result.spec.host }}'
@@ -160,7 +145,6 @@
   retries: 10
   register: result
 
-
 - name: Attempt to hit http URL
   uri:
     url: 'http://{{ route.result.spec.host }}'
@@ -168,10 +152,3 @@
   until: result is successful
   retries: 10
   register: result
-
-- name: Delete route
-  community.okd.openshift_route:
-    name: '{{ route.result.metadata.name }}'
-    namespace: default
-    state: absent
-    wait: yes
